@@ -52,7 +52,11 @@ print(hidden_size)
 data_aug_transforms = []
 # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
+# Perform geometric data-augmentations (rotate and translate) with tunned hyperparameters
+data_aug_transforms.append(torchvision.transforms.RandomAffine(degrees=15,translate=(0.1,0.1)))
 
+# Perform color space data-augmentations (brightness and contrast) with tunned hyperparameters
+data_aug_transforms.append(torchvision.transforms.ColorJitter(brightness=(0.7,1.6),contrast=(0.9,1.3)))
 
 # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 norm_transform = transforms.Compose(data_aug_transforms+[transforms.ToTensor(),
@@ -111,8 +115,28 @@ class ConvNet(nn.Module):
         #################################################################################
         layers = []
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        
+        for i in range(len(hidden_layers)): 
 
-
+            layers.append(nn.Conv2d(in_channels=input_size,
+                                    out_channels=hidden_layers[i],
+                                    kernel_size=(3,3),
+                                    stride=1,
+                                    padding='same'))
+            if norm_layer:
+                layers.append(nn.BatchNorm2d(hidden_layers[i]))
+            
+            layers.append(nn.MaxPool2d(kernel_size=(2,2),stride=2))
+            layers.append(nn.ReLU())
+            
+            # Perform Dropout data-augmentation with tunned hyperparameter
+            layers.append(nn.Dropout(0.3))
+            input_size = hidden_layers[i]
+        
+        layers.append(nn.Flatten())
+        layers.append(nn.Linear(hidden_layers[-1], 10))
+        
+        self.layers = nn.Sequential(*layers)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -122,7 +146,7 @@ class ConvNet(nn.Module):
         #################################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-
+        out = self.layers(x)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return out
@@ -140,8 +164,14 @@ def PrintModelSize(model, disp=True):
     # training                                                                      #
     #################################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-
+    """
+    torch.numel(): return the number of element in a tensor
+    requires_grad: is a flag that allows for inclusion/exclusion of subgraphs from gradient computation
+    """
+    model_sz = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    
+    if disp:
+        print("Number of trainable parameters in the model: ",model_sz)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return model_sz
@@ -160,7 +190,13 @@ def VisualizeFilter(model):
     #################################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    #plt.rcParams['figure.dpi'] = 320
+    grid=torchvision.utils.make_grid(model.layers[0].weight.cpu(),
+                                     normalize=True, nrow=16, padding=1)
+    plt.figure(figsize=(12,8) )
+    plt.imshow(grid.numpy().transpose((1,2,0)))
+    plt.show()
+
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -267,7 +303,11 @@ for epoch in range(num_epochs):
 
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        
+        if accuracy > accuracy_max:
+            print('Validation loss decreased ({:.6f} --> {:.6f}).  Saving model ...'.format(accuracy_max, accuracy))
+            # save checkpoint as best model
+            torch.save(model.state_dict(), 'best_model.pt')
+            accuracy_max = accuracy
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -298,7 +338,7 @@ plt.show()
 #################################################################################
 # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-
+model.load_state_dict(torch.load('best_model.pt'))
 
 # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
