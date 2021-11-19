@@ -53,10 +53,10 @@ data_aug_transforms = []
 # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
 # Perform geometric data-augmentations (rotate and translate) with tunned hyperparameters
-data_aug_transforms.append(torchvision.transforms.RandomAffine(degrees=15,translate=(0.1,0.1)))
+data_aug_transforms.append(torchvision.transforms.RandomAffine(degrees=10,translate=(0.15,0.15)))
 
 # Perform color space data-augmentations (brightness and contrast) with tunned hyperparameters
-data_aug_transforms.append(torchvision.transforms.ColorJitter(brightness=(0.7,1.6),contrast=(0.9,1.3)))
+data_aug_transforms.append(torchvision.transforms.ColorJitter(brightness=(0.9,1),contrast=(0.9,1.1)))
 
 # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 norm_transform = transforms.Compose(data_aug_transforms+[transforms.ToTensor(),
