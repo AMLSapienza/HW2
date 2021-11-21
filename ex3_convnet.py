@@ -115,8 +115,14 @@ class ConvNet(nn.Module):
         #################################################################################
         layers = []
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        
-        for i in range(len(hidden_layers)): 
+
+        """
+        given the hidden_layer list
+        iterates over each integer number
+        of filters in the list and creates
+        convolutional, MaxPooling and ReLU layers.
+        """
+        for i in range(len(hidden_layers)):
 
             layers.append(nn.Conv2d(in_channels=input_size,
                                     out_channels=hidden_layers[i],
@@ -125,17 +131,22 @@ class ConvNet(nn.Module):
                                     padding='same'))
             if norm_layer:
                 layers.append(nn.BatchNorm2d(hidden_layers[i]))
-            
+
             layers.append(nn.MaxPool2d(kernel_size=(2,2),stride=2))
             layers.append(nn.ReLU())
-            
+
             # Perform Dropout data-augmentation with tunned hyperparameter
             layers.append(nn.Dropout(0.3))
             input_size = hidden_layers[i]
-        
+        """
+        After the loop, a flatten vector is created that squuezes the tensor
+        of the last convolutional layer into a 1D vector and finally a linear
+         layer that maps the Flatten layer to the Output layer for
+         the 10 class classification task.
+        """
         layers.append(nn.Flatten())
         layers.append(nn.Linear(hidden_layers[-1], 10))
-        
+
         self.layers = nn.Sequential(*layers)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -169,7 +180,7 @@ def PrintModelSize(model, disp=True):
     requires_grad: is a flag that allows for inclusion/exclusion of subgraphs from gradient computation
     """
     model_sz = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    
+
     if disp:
         print("Number of trainable parameters in the model: ",model_sz)
 
@@ -191,9 +202,27 @@ def VisualizeFilter(model):
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     #plt.rcParams['figure.dpi'] = 320
+    """
+    From the torchvision library,
+    we used utils.make_grid to create a grid of all tensors
+    representing the activations maps of the first convolutional
+    layer of the network.
+    :Tensors model.layers[0].weight: return the weights from the first CN layer
+    :method tensor.cpu():  moves it back to memory accessible to the CPU after training on cuda
+    :Flag normalize: If True, shift the image to the range (0, 1), by the min and max values (needed to then use matplotlib)
+    :int nrows: Number of images displayed in each row of the grid
+    :int padding: amount of padding
+    """
     grid=torchvision.utils.make_grid(model.layers[0].weight.cpu(),
                                      normalize=True, nrow=16, padding=1)
+
+    #setting size of the output image
     plt.figure(figsize=(12,8) )
+    """
+    in PyTorch, the order of dimension is (channel*width*height)
+    but in matplotlib it’s width*height*channel so to re-establish
+    the correct order it is necessary to transpose as reported below.
+    """
     plt.imshow(grid.numpy().transpose((1,2,0)))
     plt.show()
 
@@ -260,19 +289,19 @@ for epoch in range(num_epochs):
         optimizer.step()
 
         loss_iter += loss.item()
-        
+
         if (i+1) % 100 == 0:
             print ('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'
                    .format(epoch+1, num_epochs, i+1, total_step, loss.item()))
-            
+
     loss_train.append(loss_iter/(len(train_loader)*batch_size))
 
-    
+
     # Code to update the lr
     lr *= learning_rate_decay
     update_lr(optimizer, lr)
-    
-        
+
+
     model.eval()
     with torch.no_grad():
         correct = 0
@@ -281,16 +310,16 @@ for epoch in range(num_epochs):
         for images, labels in val_loader:
             images = images.to(device)
             labels = labels.to(device)
-            
+
             outputs = model(images)
             _, predicted = torch.max(outputs.data, 1)
-            
+
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
-            
+
             loss = criterion(outputs, labels)
             loss_iter += loss.item()
-        
+
         loss_val.append(loss_iter/(len(val_loader)*batch_size))
 
         accuracy = 100 * correct / total
@@ -302,7 +331,7 @@ for epoch in range(num_epochs):
         #################################################################################
 
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        
+
         # Since we are not interested in computational performance we will not include a stop condition
         # we simply store the best model
         if accuracy == max(accuracy_val):
@@ -313,7 +342,7 @@ for epoch in range(num_epochs):
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    
+
 
 # Test the model
 # In test phase, we don't need to compute gradients (for memory efficiency)
@@ -370,5 +399,3 @@ VisualizeFilter(model)
 
 # Save the model checkpoint
 #torch.save(model.state_dict(), 'model.ckpt')
-
-
