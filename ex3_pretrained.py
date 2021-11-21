@@ -98,7 +98,14 @@ class VggModel(nn.Module):
         # disable training the feature extraction layers based on the fine_tune flag.   #
         #################################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        model = torchvision.models.vgg11_bn(pretrained=pretrained, progress=True).cuda()
+        set_parameter_requires_grad(model, feature_extracting=fine_tune)
+        classifier = [nn.Flatten(),
+                      nn.Linear(layer_config[0], layer_config[1]),
+                      nn.ReLU(inplace=True),
+                      nn.BatchNorm1d(layer_config[1]),
+                      nn.Linear(layer_config[1], n_class)]
+        self.new_model = nn.Sequential(*(list(model.children())[0], *classifier))
         
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -108,7 +115,7 @@ class VggModel(nn.Module):
         # TODO: Implement the forward pass computations                                 #
         #################################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        out = self.new_model(x)
         
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -131,8 +138,10 @@ print("Params to learn:")
 if fine_tune:
     params_to_update = []
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    
-    
+    for name, param in model.named_parameters():
+        if param.requires_grad == True:
+            params_to_update.append(param)
+            print("\t", name)
     
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 else:
@@ -219,8 +228,12 @@ for epoch in range(num_epochs):
         #################################################################################
 
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-
+        # Do not forget here accuracy_max is not defined
+        if accuracy > accuracy_max:
+          print('Validation loss decreased ({:.6f} --> {:.6f}).  Saving model ...'.format(accuracy_max, accuracy))
+          # save checkpoint as best model
+          torch.save(model.state_dict(), 'best_model.pt')
+          accuracy_max = accuracy
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -249,7 +262,7 @@ plt.show()
 # weights from the best model so far and perform testing with this model.       #
 #################################################################################
 # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+model.load_state_dict(torch.load('best_model.pt'))
 
 
 # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
