@@ -40,7 +40,8 @@ pretrained=True
 #-------------------------------------------------
 # Load the CIFAR-10 dataset
 #-------------------------------------------------
-data_aug_transforms = [transforms.RandomHorizontalFlip(p=0.5)]#, transforms.RandomGrayscale(p=0.05)]
+# Note that, the best hyper-parameters from Q3.a is not used in this part, instead slighter augmentation is applied in order to get higher validation accuracy
+data_aug_transforms = [transforms.RandomHorizontalFlip(p=0.5),, transforms.RandomAffine(degrees=1, translate=(0.01,0.01)),transforms.ColorJitter(brightness=(0.9,1), contrast=(0.9, 1.1))]#, transforms.RandomGrayscale(p=0.05)]
 ###############################################################################
 # TODO: Add to data_aug_transforms the best performing data augmentation      #
 # strategy and hyper-parameters as found out in Q3.a                          #
@@ -228,7 +229,6 @@ for epoch in range(num_epochs):
         #################################################################################
 
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        # Do not forget here accuracy_max is not defined
         if accuracy > accuracy_max:
           print('Validation loss decreased ({:.6f} --> {:.6f}).  Saving model ...'.format(accuracy_max, accuracy))
           # save checkpoint as best model
