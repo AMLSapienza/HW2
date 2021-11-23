@@ -338,7 +338,6 @@ for epoch in range(num_epochs):
             print('Validation accuracy increased to (--> {:.6f}).  Saving model ...'.format(accuracy))
             # save checkpoint as best model
             torch.save(model.state_dict(), 'best_model.pt')
-            accuracy_max = accuracy
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
