@@ -229,11 +229,13 @@ for epoch in range(num_epochs):
         #################################################################################
 
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        if accuracy > accuracy_max:
-          print('Validation loss decreased ({:.6f} --> {:.6f}).  Saving model ...'.format(accuracy_max, accuracy))
+
+        # Since we are not interested in computational performance we will not include a stop condition
+        # we simply store the best model
+        if accuracy == max(accuracy_val):
+          print('Validation loss decreased ({:.6f} --> {:.6f}).  Saving model ...'.format(accuracy))
           # save checkpoint as best model
           torch.save(model.state_dict(), 'best_model.pt')
-          accuracy_max = accuracy
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
